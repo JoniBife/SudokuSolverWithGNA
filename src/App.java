@@ -1,101 +1,78 @@
-/*
- * This file is part of the genetic-sudoku-solver.
- *
- * (c) Marcel Moosbrugger
- *
- * This source file is subject to the MIT license that is bundled
- * with this source code in the file LICENSE.
- */
+public class App {
 
-import io.GridReader;
-import io.GridWriter;
-import problem.Problem;
-import problem.World;
-import problem.crossover.UniformCrossover;
-import problem.habitat.Individual;
-import problem.mutation.SwapRowMutation;
-import problem.registry.Registry;
-import problem.selection.RouletteWheelSelection;
-import sudoku.*;
+    public static final double MUTATION_RATE = 0.05;
+    public static final int POPULATION_SIZE = 30;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+    public static final Chromosome SCHEME4X4 = new Chromosome(
+            new int[]{
+                    0,2,0,0,
+                    4,0,0,2,
+                    0,0,2,0,
+                    0,1,0,0
+            },2);
+    public static final Chromosome SCHEME9X9 = new Chromosome(
+            new int[]{
+                    5,3,0,0,7,0,0,0,0,
+                    6,0,0,1,9,5,0,0,0,
+                    0,9,8,0,0,0,0,6,0,
+                    8,0,0,0,6,0,0,0,3,
+                    4,0,0,8,0,3,0,0,1,
+                    7,0,0,0,2,0,0,0,6,
+                    0,6,0,0,0,0,2,8,0,
+                    0,0,0,4,1,9,0,0,5,
+                    0,0,0,0,8,0,0,7,9},
+        3);
 
-/**
- * Class parses the input parameters and starts the algorithm
- */
-public final class App {
+    public static final Chromosome EASYSCHEME9X9 = new Chromosome(
+            new int[]{
+                    4,1,0,2,7,0,8,0,5,
+                    0,8,5,1,4,6,0,9,7,
+                    0,7,0,5,8,0,0,4,0,
+                    9,2,7,4,5,1,3,8,6,
+                    5,3,8,6,9,7,4,1,2,
+                    1,6,4,3,2,8,7,5,9,
+                    8,5,2,7,0,4,9,0,0,
+                    0,9,0,8,0,2,5,7,4,
+                    7,4,0,9,6,5,0,2,8},
+            3);
 
-    /* default configurations */
-    private static double elitismRate = 0.002;
-    private static double mutationRate = 0.1;
-    private static int populationSize = 1000;
-    private static int populationsBeforeRestart = 20;
-    private static int numberParents = 2;
-    private static int numberLeftEmptyFields = 0;
-
-    /**
-     * Main entry point
-     * @param args array of the program's arguments (for details see README.md)
-     */
     public static void main(String[] args) {
-        GridWriter.printTitle();
-        App.parseArguments(new ArrayList<>(Arrays.asList(args)));
-        GridWriter.printSpace();
-        SudokuGrid grid = GridReader.read();
-        GridWriter.printSpace();
 
-        if (grid != null) {
-            GridWriter.printIntput(grid);
+        Population p = new Population(POPULATION_SIZE,EASYSCHEME9X9);
+        p.calculateFitness();
+        p.sortByFitness();
+        p.sumOfFitness();
 
-            Registry.getInstance().set("elitism-rate", App.elitismRate);
-            Registry.getInstance().set("mutation-rate", App.mutationRate);
-            Registry.getInstance().set("population-size", App.populationSize);
-            Registry.getInstance().set("presolver-leave-empty", App.numberLeftEmptyFields);
-            Registry.getInstance().set("populations-before-restart", App.populationsBeforeRestart);
-            Registry.getInstance().set("grid", grid);
-            Registry.getInstance().set("problem", new Problem(grid));
-            Registry.getInstance().set("crossover", new UniformCrossover(App.numberParents));
-            Registry.getInstance().set("selection", new RouletteWheelSelection());
-            Registry.getInstance().set("mutation", new SwapRowMutation());
-
-            GridWriter.printPresolve(grid, ((Problem) Registry.getInstance().get("problem")).getVariableFields().length);
-
-            World world = new World();
-            Individual solution = world.findSolution();
-
-            GridWriter.printSolution(solution);
+        int i = 0;
+        System.out.println(p);
+        while(!checkSolution(p)){
+            GeneticAlgorithm.rouletteWheelSelection(p,1000,EASYSCHEME9X9,MUTATION_RATE);
+            p.calculateFitness();
+            p.sortByFitness();
+            //p.sumOfFitness();
+            ++i;
+            if(i == 15000) {
+                p = new Population(POPULATION_SIZE, EASYSCHEME9X9);
+                p.calculateFitness();
+                p.sortByFitness();
+                i = 0;
+            }
+            System.out.println(p);
         }
+        System.out.println("---------------------- GENERATION " + i + " ----------------------" );
+
     }
 
-    /**
-     * Parses an array-list of arguments and sets the variables for the algorithm
-     * @param args the array-list of arguments to parse
-     */
-    private static void parseArguments(ArrayList<String> args) {
-        if (args.indexOf("-e") > -1) {
-            App.elitismRate = Double.parseDouble(args.get(args.indexOf("-e") + 1));
-            GridWriter.printParameterChange("Elitism-rate (-e)", App.elitismRate);
+    public static boolean checkSolution(Population population){
+        Chromosome[] chromosomes = population.chromosomes;
+        for (int i = 0; i < chromosomes.length; i++) {
+            if(chromosomes[i].conflicts() == 0) {
+                System.out.println();
+                System.out.println(" -----------------THE FUCKING SOLUTION-----------------");
+                System.out.println(chromosomes[i]);
+                return true;
+            }
         }
-        if (args.indexOf("-m") > -1) {
-            App.mutationRate = Double.parseDouble(args.get(args.indexOf("-m") + 1));
-            GridWriter.printParameterChange("Mutation-rate (-m)", App.mutationRate);
-        }
-        if (args.indexOf("-p") > -1) {
-            App.populationSize = Integer.parseInt(args.get(args.indexOf("-p") + 1));
-            GridWriter.printParameterChange("Population size (-p)", App.populationSize);
-        }
-        if (args.indexOf("-b") > -1) {
-            App.populationsBeforeRestart = Integer.parseInt(args.get(args.indexOf("-b") + 1));
-            GridWriter.printParameterChange("Populations before restart (-b)", App.populationsBeforeRestart);
-        }
-        if (args.indexOf("-n") > -1) {
-            App.numberParents = Integer.parseInt(args.get(args.indexOf("-n") + 1));
-            GridWriter.printParameterChange("Number of parents (-n)", App.numberParents);
-        }
-        if (args.indexOf("-l") > -1) {
-            App.numberLeftEmptyFields = Integer.parseInt(args.get(args.indexOf("-l") + 1));
-            GridWriter.printParameterChange("Number of fields left empty by the presolver (-l)", App.numberLeftEmptyFields);
-        }
+        return false;
     }
 }
