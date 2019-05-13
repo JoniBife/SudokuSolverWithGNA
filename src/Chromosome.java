@@ -119,11 +119,11 @@ public class Chromosome {
     public String toString() {
         String tostr = "";
         for (int i = 0; i < CHROMOSOME_SIZE; i++) {
-            if(i % 9 == 0)
+            if(i % BLOCK_SIZE == 0)
                 System.out.println();
             System.out.print(genes[i] + ",");
         }
-        return tostr + "\n fitness = " + fitness*100 +
+        return tostr + "\n\n fitness = " + fitness*100 +
                 "% and conflicts = " + conflicts;
     }
 }

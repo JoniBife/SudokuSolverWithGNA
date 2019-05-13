@@ -57,13 +57,11 @@ public class GeneticAlgorithm {
         return selection;
     }
 
-    public static Chromosome[] uniformCrossOver(Chromosome a,Chromosome b,final Chromosome scheme){
+    public static Chromosome[] uniformCrossOver(Chromosome a,Chromosome b,Chromosome scheme){
         int[] schemeGenes = new int[scheme.genes().length];
-        for (int i = 0; i < scheme.genes().length ; i++) {
-            schemeGenes[i] = scheme.genes()[i];
-        }
         int[] schemeGenes2 = new int[scheme.genes().length];
         for (int i = 0; i < scheme.genes().length ; i++) {
+            schemeGenes[i] = scheme.genes()[i];
             schemeGenes2[i] = scheme.genes()[i];
         }
         int[] mask = new int[schemeGenes.length];
@@ -75,19 +73,36 @@ public class GeneticAlgorithm {
         childs[1] = new Chromosome(schemeGenes2,scheme.BLOCK_SIDE);
         for (int i = 0; i < scheme.CHROMOSOME_SIZE; i++) {
             if(childs[0].genes()[i] == 0) {
-                if(mask[i] == 1)
-                    childs[0].setGene(i,a.genes()[i]);
-                else
-                    childs[0].setGene(i,b.genes()[i]);
+                if(mask[i] == 1) {
+                    childs[0].setGene(i, a.genes()[i]);
+                    childs[1].setGene(i, b.genes()[i]);
+                } else {
+                    childs[0].setGene(i, b.genes()[i]);
+                    childs[1].setGene(i, a.genes()[i]);
+                }
             }
         }
-        for (int i = 0; i < scheme.CHROMOSOME_SIZE; i++) {
-            if(childs[0].genes()[i] == 0) {
-                if(mask[i] == 0)
-                    childs[0].setGene(i,a.genes()[i]);
-                else
-                    childs[0].setGene(i,b.genes()[i]);
-            }
+        return childs;
+    }
+
+    public static Chromosome[] singlePointCrossOver(Chromosome a, Chromosome b, Chromosome scheme){
+        int chromosomeSize = scheme.CHROMOSOME_SIZE;
+        int[] schemeGenes = new int[scheme.genes().length];
+        int[] schemeGenes2 = new int[scheme.genes().length];
+        for (int i = 0; i < chromosomeSize ; i++) {
+            schemeGenes[i] = scheme.genes()[i];
+            schemeGenes2[i] = scheme.genes()[i];
+        }
+        Chromosome[] childs = new Chromosome[2];
+        childs[0] = new Chromosome(schemeGenes,scheme.BLOCK_SIDE);
+        childs[1] = new Chromosome(schemeGenes2,scheme.BLOCK_SIDE);
+
+        //random crossover point
+        int midPoint = (int)(Math.random()*chromosomeSize);
+
+        for (int i = 0; i < chromosomeSize ; i++) {
+            childs[0].genes()[i] =  i > midPoint ? a.genes()[i] : b.genes()[i];
+            childs[1].genes()[i] =  i > midPoint ? b.genes()[i] : a.genes()[i];
         }
         return childs;
     }

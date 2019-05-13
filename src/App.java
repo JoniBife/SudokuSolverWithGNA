@@ -1,7 +1,8 @@
 public class App {
 
-    public static final double MUTATION_RATE = 0.05;
-    public static final int POPULATION_SIZE = 30;
+    public static final double MUTATION_RATE = 0.08;
+    public static final int POPULATION_SIZE = 500;
+    public static final int ROULETTE_SIZE = POPULATION_SIZE*100;
 
     public static final Chromosome SCHEME4X4 = new Chromosome(
             new int[]{
@@ -38,29 +39,38 @@ public class App {
 
     public static void main(String[] args) {
 
-        Population p = new Population(POPULATION_SIZE,EASYSCHEME9X9);
+        //solveSudoku(SCHEME4X4);
+        //solveSudoku(EASYSCHEME9X9);
+        solveSudoku(SCHEME9X9);
+
+
+
+    }
+    public static void solveSudoku(Chromosome scheme){
+        Population p = new Population(POPULATION_SIZE,scheme);
         p.calculateFitness();
         p.sortByFitness();
-        p.sumOfFitness();
 
         int i = 0;
+        int j = 0;
         System.out.println(p);
         while(!checkSolution(p)){
-            GeneticAlgorithm.rouletteWheelSelection(p,1000,EASYSCHEME9X9,MUTATION_RATE);
+            GeneticAlgorithm.rouletteWheelSelection(p,ROULETTE_SIZE,scheme,MUTATION_RATE);
             p.calculateFitness();
             p.sortByFitness();
-            //p.sumOfFitness();
             ++i;
-            if(i == 15000) {
-                p = new Population(POPULATION_SIZE, EASYSCHEME9X9);
+
+            if(i == 300000) {
+                p = new Population(POPULATION_SIZE, SCHEME9X9);
                 p.calculateFitness();
                 p.sortByFitness();
                 i = 0;
+                ++j;
             }
-            System.out.println(p);
+            System.out.println(p + " generation = " + i);
         }
         System.out.println("---------------------- GENERATION " + i + " ----------------------" );
-
+        System.out.println("Took " + j + "  retries");
     }
 
     public static boolean checkSolution(Population population){
