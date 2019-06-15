@@ -3,12 +3,7 @@ import java.util.Arrays;
 
 public class GeneticAlgorithm {
 
-    public static Chromosome[] naturalSelection(Population population){
-        //The two fittest will be at the two first positions of the chromosomes array due to sort by fitness function
-        return new Chromosome[]{population.chromosomes[0],population.chromosomes[1]};
-    }
-
-    public static void rouletteWheelSelection(Population population,int rouletteSize,Chromosome scheme,Double mutationRate){
+    public static Chromosome[] rouletteWheelSelection(Population population,int rouletteSize){
         ArrayList<Chromosome> roulette = new ArrayList<>(rouletteSize);
 
         for (int i = 0; i < population.chromosomes.length ; i++) {
@@ -19,30 +14,29 @@ public class GeneticAlgorithm {
             }
         }
 
-        //Selection, Crossover and mutation
         Chromosome a = selectRandom(null,roulette);
         Chromosome b = selectRandom(a,roulette);
-        Chromosome[] children = uniformCrossOver(a,b,scheme);
-        mutate(children[0],scheme,mutationRate);
-        mutate(children[1],scheme,mutationRate);
 
-        population.chromosomes[population.populationSize - 2] = children[0];
-        population.chromosomes[population.populationSize - 1] = children[1];
+        return new Chromosome[]{a,b};
+    }
 
+    public static Chromosome[] tournamentSelection(Population population,int tournamentSize){
+        Chromosome[] participants = new Chromosome[tournamentSize];
 
-        /*for (int i = 0; i < population.populationSize; i++) {
-            if(a.equals(population.chromosomes[i])) {
-                population.chromosomes[i] = children[0];
-                break;
-            }
+        for (int i = 0; i < tournamentSize; i++) {
+            int randomSelection = (int)(Math.random() * population.populationSize);
+            participants[i] = population.chromosomes[randomSelection];
         }
-        for (int i = 0; i < population.populationSize; i++) {
-            if(a.equals(population.chromosomes[i])) {
-                population.chromosomes[i] = children[1];
-                break;
-            }
-        }*/
 
+        Arrays.sort(participants, (chrs1, chrs2) -> {
+            if(chrs1.fitness() > chrs2.fitness())
+                return -1;
+            else if(chrs1.fitness() < chrs2.fitness())
+                return 1;
+            return 0;
+        });
+
+        return new Chromosome[]{participants[0],participants[1]};
     }
 
     public static Chromosome selectRandom(Chromosome previous,ArrayList<Chromosome> roulette){
@@ -115,5 +109,30 @@ public class GeneticAlgorithm {
                 }
             }
         }
+    }
+
+    public static void addToPopulation(Chromosome[] children,Population population){
+        //Double random = Math.random();
+
+        population.chromosomes[population.populationSize - 2] = children[0];
+        population.chromosomes[population.populationSize - 1] = children[1];
+        /*} else {
+            population.chromosomes[(int) (Math.random() * population.populationSize)] = children[0];
+            population.chromosomes[(int) (Math.random() * population.populationSize)] = children[1];
+        }*/
+
+
+        /*for (int i = 0; i < population.populationSize; i++) {
+            if(a.equals(population.chromosomes[i])) {
+                population.chromosomes[i] = children[0];
+                break;
+            }
+        }
+        for (int i = 0; i < population.populationSize; i++) {
+            if(a.equals(population.chromosomes[i])) {
+                population.chromosomes[i] = children[1];
+                break;
+            }
+        }*/
     }
 }

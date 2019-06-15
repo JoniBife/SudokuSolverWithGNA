@@ -22,7 +22,10 @@ public class Population {
     public void calculateFitness(){
         int sumOFConflicts = 0;
         for (int i = 0; i < populationSize; i++) {
-            chromosomes[i].calculateConflicts();
+            if(chromosomes[i].changed()) {
+                chromosomes[i].calculateConflicts();
+                chromosomes[i].change(false);
+            }
             sumOFConflicts += chromosomes[i].conflicts();
         }
         float[] notnormalizedfitness = new float[populationSize];
@@ -43,6 +46,15 @@ public class Population {
             if(chrs1.fitness() > chrs2.fitness())
                 return -1;
             else if(chrs1.fitness() < chrs2.fitness())
+                return 1;
+            return 0;
+        });
+    }
+    public void sortByConflicts(){
+        Arrays.sort(chromosomes, (chrs1, chrs2) -> {
+            if(chrs1.conflicts() > chrs2.conflicts())
+                return -1;
+            else if(chrs1.conflicts() < chrs2.conflicts())
                 return 1;
             return 0;
         });

@@ -2,15 +2,25 @@ public class App {
 
     public static final double MUTATION_RATE = 0.08;
     public static final int POPULATION_SIZE = 500;
-    public static final int ROULETTE_SIZE = POPULATION_SIZE*100;
+    public static final int ROULETTE_SIZE = POPULATION_SIZE*50;
+    public static final int TOURNAMENT_SIZE = POPULATION_SIZE/10;
 
     public static final Chromosome SCHEME4X4 = new Chromosome(
             new int[]{
                     0,2,0,0,
-                    4,0,0,2,
+                    4,0,0,0,
                     0,0,2,0,
                     0,1,0,0
             },2);
+
+    public static final Chromosome SCHEME4X4EMPTY = new Chromosome(
+            new int[]{
+                    0,0,0,0,
+                    0,0,0,0,
+                    0,0,0,0,
+                    0,0,0,0
+            },2);
+
     public static final Chromosome SCHEME9X9 = new Chromosome(
             new int[]{
                     5,3,0,0,7,0,0,0,0,
@@ -37,14 +47,25 @@ public class App {
                     7,4,0,9,6,5,0,2,8},
             3);
 
-    public static void main(String[] args) {
+    public static final Chromosome EMPTYSCHEME9X9 = new Chromosome(
+            new int[]{
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0,0},
+            3);
 
+    public static void main(String[] args) {
         //solveSudoku(SCHEME4X4);
+        //solveSudoku(SCHEME4X4EMPTY);
         //solveSudoku(EASYSCHEME9X9);
         solveSudoku(SCHEME9X9);
-
-
-
+        //solveSudoku(EMPTYSCHEME9X9);
     }
     public static void solveSudoku(Chromosome scheme){
         Population p = new Population(POPULATION_SIZE,scheme);
@@ -55,18 +76,21 @@ public class App {
         int j = 0;
         System.out.println(p);
         while(!checkSolution(p)){
-            GeneticAlgorithm.rouletteWheelSelection(p,ROULETTE_SIZE,scheme,MUTATION_RATE);
+
+            //Selection
+            Chromosome[] parents = GeneticAlgorithm.rouletteWheelSelection(p,ROULETTE_SIZE);
+            //Chromosome[] parents = GeneticAlgorithm.tournamentSelection(p,TOURNAMENT_SIZE);
+            //Crossover
+            Chromosome[] children = GeneticAlgorithm.uniformCrossOver(parents[0],parents[1],scheme);
+            //Mutation
+            GeneticAlgorithm.mutate(children[0],scheme,MUTATION_RATE);
+            GeneticAlgorithm.mutate(children[1],scheme,MUTATION_RATE);
+            //Adding new children to population
+            GeneticAlgorithm.addToPopulation(children,p);
+            //Recalculating fitness of the new population and sorting according to it
             p.calculateFitness();
             p.sortByFitness();
             ++i;
-
-            if(i == 300000) {
-                p = new Population(POPULATION_SIZE, SCHEME9X9);
-                p.calculateFitness();
-                p.sortByFitness();
-                i = 0;
-                ++j;
-            }
             System.out.println(p + " generation = " + i);
         }
         System.out.println("---------------------- GENERATION " + i + " ----------------------" );
@@ -74,15 +98,24 @@ public class App {
     }
 
     public static boolean checkSolution(Population population){
-        Chromosome[] chromosomes = population.chromosomes;
-        for (int i = 0; i < chromosomes.length; i++) {
-            if(chromosomes[i].conflicts() == 0) {
+            if(population.chromosomes[0].conflicts() == 0) {
                 System.out.println();
-                System.out.println(" -----------------THE FUCKING SOLUTION-----------------");
-                System.out.println(chromosomes[i]);
+                System.out.println(" -----------------THE SOLUTION-----------------");
+                System.out.println(population.chromosomes[0]);
                 return true;
             }
+            return false;
+    }
+
+    public static Population newElites(Population population,int numbOfElites){
+        Population p = new Population(POPULATION_SIZE, SCHEME9X9);
+        p.sortByFitness();
+
+        int j = POPULATION_SIZE - 1;
+        for (int i = 0 ; i < numbOfElites; i++,j--) {
+            p.chromosomes[j] = population.chromosomes[i];
         }
-        return false;
+
+        return p;
     }
 }

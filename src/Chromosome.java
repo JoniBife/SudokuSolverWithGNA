@@ -9,6 +9,7 @@ public class Chromosome {
     public final int BLOCK_SIZE;
     public final int BLOCK_RATIO;
     public final int BLOCK_SIDE;
+    private boolean changed = true;
 
     public Chromosome(int blockSide, Chromosome scheme){
         CHROMOSOME_SIZE = blockSide*blockSide*blockSide*blockSide;
@@ -112,6 +113,14 @@ public class Chromosome {
 
     public void setGene(int i,int value){
         genes[i] = value;
+    }
+
+    public void change(Boolean changed) {
+        this.changed = changed;
+    }
+
+    public boolean changed(){
+        return changed;
     }
 
 
